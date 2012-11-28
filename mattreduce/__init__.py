@@ -10,12 +10,10 @@ class Step(object):
 
 class Job(object):
 
-    def __init__(self, steps=None, finalizer=None):
-        self.steps = steps or []
+    def __init__(self, mapper, reducer, finalizer=None):
+        self.mapper = mapper
+        self.reducer = reducer
         self.finalizer = finalizer
-
-    def add_step(self, mapper, reducer):
-        self.steps.append(Step(mapper, reducer))
 
     def combine(self, mapped_values):
         """Group mapped <key, value> pairs.
@@ -33,16 +31,19 @@ class Job(object):
             yield (key, combined[key])
 
     def run(self, items):
-        for step in self.steps:
-            # map
-            mapped = (step.mapper(item) for item in items)
-            # combine
-            combined = self.combine(mapped)
-            # print list(combined)
-            # reduce
-            reduced = (step.reducer(key, values) for key, values in combined)
+        # map
+        mapped = (step.mapper(item) for item in items)
+        # combine
+        combined = self.combine(mapped)
+        # reduce
+        reduced = (step.reducer(key, values) for key, values in combined)
 
-        return reduced
+        if self.finalizer is None:
+            return reduced
+
+        finalized = self.finalizer(reduced)
+
+        return finalized
 
 
 if __name__ == '__main__':
