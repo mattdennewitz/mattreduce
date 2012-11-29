@@ -1,7 +1,7 @@
 class JobChain(object):
 
     def __init__(self, jobs, finalizer=None):
-        self.jobs = job
+        self.jobs = jobs
         self.finalizer = finalizer
         self.state = None
 
